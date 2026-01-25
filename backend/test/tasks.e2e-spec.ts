@@ -70,7 +70,7 @@ describe('Tasks (e2e)', () => {
       });
   });
 
-  // TEST (GET/tasks/:id)
+  // TEST (GET/tasks/:id found and not found)
   it('/GET tasks/:id (found)', async () => {
   const created = await request(app.getHttpServer())
     .post('/tasks')
@@ -93,6 +93,42 @@ describe('Tasks (e2e)', () => {
 it('/GET tasks/:id (not found)', () => {
   return request(app.getHttpServer())
     .get('/tasks/999999')
+    .expect(404);
+});
+
+// PUT /tasks/:id (success)
+it('/PUT tasks/:id (update)', async () => {
+  const created = await request(app.getHttpServer())
+    .post('/tasks')
+    .send({
+      title: 'Task Update',
+      dueAt: '2026-01-30T00:00:00.000Z',
+    });
+
+  const id = created.body.id;
+
+  return request(app.getHttpServer())
+    .put(`/tasks/${id}`)
+    .send({
+      title: 'Updated Title',
+      description: 'Updated Description',
+      status: 'IN_PROGRESS',
+      dueAt: '2026-02-01T00:00:00.000Z',
+    })
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.title).toBe('Updated Title');
+      expect(res.body.status).toBe('IN_PROGRESS');
+    });
+});
+
+// PUT /tasks/:id (not found)
+it('/PUT tasks/:id (not found)', () => {
+  return request(app.getHttpServer())
+    .put('/tasks/999999')
+    .send({
+      title: 'Updated Title',
+    })
     .expect(404);
 });
 
