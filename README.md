@@ -147,6 +147,20 @@ frontend/
 
 ## 🧠 Technical Choices (Why these?)
 
+### ✅ NestJS (Backend Framework)
+Chosen for:
+- Clean architecture and modular structure
+- Built-in support for dependency injection
+- Easy scalability and maintainability
+- Strong TypeScript support and powerful CLI
+
+### ✅ PostgreSQL (Database)
+Chosen for:
+- Strong relational data support
+- ACID compliance for data integrity
+- Great performance and reliability
+- Easy to scale and widely supported in production
+
 ### ✅ Next.js (App Router)
 Chosen for:
 - Fast rendering
