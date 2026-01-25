@@ -13,11 +13,6 @@ export class TasksController {
     return this.tasksService.create(createTaskDto);
   }
 
-  // @Get()
-  // findAll() {
-  //   return this.tasksService.findAll();
-  // }
-
    @Get()
   findAll(@Query() query: PaginationDto) {
     return this.tasksService.findAll(query);

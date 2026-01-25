@@ -13,29 +13,6 @@ export class TasksService {
     private tasksRepository: Repository<Task>,
   ) {}
 
-//   async create(createTaskDto: CreateTaskDto): Promise<Task> {
-//   // Get the last task by order
-//   const lastTask = await this.tasksRepository.find({
-//     order: { order: 'DESC' },
-//     take: 1,
-//   });
-
-//   const maxOrder = lastTask[0]?.order ?? 0;
-
-//   const task = this.tasksRepository.create({
-//     ...createTaskDto,
-//     order: maxOrder + 1,
-//   });
-
-//   return this.tasksRepository.save(task);
-// }
-
-  //  findAll() {
-  //   return this.tasksRepository.find({
-  //     order: { order: 'ASC' },
-  //   });
-  // }
-
 async create(createTaskDto: CreateTaskDto): Promise<Task> {
   let order = createTaskDto.order;
 
