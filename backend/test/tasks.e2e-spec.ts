@@ -132,6 +132,29 @@ it('/PUT tasks/:id (not found)', () => {
     .expect(404);
 });
 
+// DELETE /tasks/:id (success)
+it('/DELETE tasks/:id (success)', async () => {
+  const created = await request(app.getHttpServer())
+    .post('/tasks')
+    .send({
+      title: 'Task Delete',
+      dueAt: '2026-01-30T00:00:00.000Z',
+    });
+
+  const id = created.body.id;
+
+  return request(app.getHttpServer())
+    .delete(`/tasks/${id}`)
+    .expect(204);
+});
+
+// DELETE /tasks/:id (not found)
+it('/DELETE tasks/:id (not found)', () => {
+  return request(app.getHttpServer())
+    .delete('/tasks/999999')
+    .expect(404);
+});
+
 
   afterAll(async () => {
     await app.close();
