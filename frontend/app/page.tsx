@@ -222,7 +222,7 @@ export default function TasksPage() {
 
         {feedback && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
+            className={`fixed bottom-4 right-4 z-50 w-64 p-4 rounded-lg shadow-lg ${
               feedback.type === 'success'
                 ? 'bg-green-100 text-green-700'
                 : 'bg-red-100 text-red-700'
