@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Task } from './task.entity';
@@ -24,5 +24,15 @@ export class TasksService {
     return this.tasksRepository.find({
       order: { order: 'ASC' },
     });
+  }
+
+  async findOne(id: number) {
+    const task = await this.tasksRepository.findOneBy({ id });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    return task;
   }
 }

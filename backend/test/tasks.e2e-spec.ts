@@ -70,6 +70,33 @@ describe('Tasks (e2e)', () => {
       });
   });
 
+  // TEST (GET/tasks/:id)
+  it('/GET tasks/:id (found)', async () => {
+  const created = await request(app.getHttpServer())
+    .post('/tasks')
+    .send({
+      title: 'Task Found',
+      dueAt: '2026-01-30T00:00:00.000Z',
+    });
+
+  const id = created.body.id;
+
+  return request(app.getHttpServer())
+    .get(`/tasks/${id}`)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.id).toBe(id);
+      expect(res.body.title).toBe('Task Found');
+    });
+});
+
+it('/GET tasks/:id (not found)', () => {
+  return request(app.getHttpServer())
+    .get('/tasks/999999')
+    .expect(404);
+});
+
+
   afterAll(async () => {
     await app.close();
   });
