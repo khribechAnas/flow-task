@@ -19,4 +19,10 @@ export class TasksService {
 
     return this.tasksRepository.save(task);
   }
+
+   findAll() {
+    return this.tasksRepository.find({
+      order: { order: 'ASC' },
+    });
+  }
 }

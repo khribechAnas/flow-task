@@ -39,6 +39,37 @@ describe('Tasks (e2e)', () => {
       .expect(400);
   });
 
+  // TEST (GET /tasks ordered)
+  it('/GET tasks (ordered by order)', async () => {
+    // create tasks with different order values
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .send({
+        title: 'Task A',
+        dueAt: '2026-01-30T00:00:00.000Z',
+        order: 2,
+      });
+
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .send({
+        title: 'Task B',
+        dueAt: '2026-01-30T00:00:00.000Z',
+        order: 1,
+      });
+
+    return request(app.getHttpServer())
+      .get('/tasks')
+      .expect(200)
+      .expect((res) => {
+        expect(Array.isArray(res.body)).toBe(true);
+        expect(res.body.length).toBeGreaterThanOrEqual(2);
+
+        // check order sorting
+        expect(res.body[0].order).toBeLessThanOrEqual(res.body[1].order);
+      });
+  });
+
   afterAll(async () => {
     await app.close();
   });
