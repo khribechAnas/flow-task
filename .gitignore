@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+
+# build
+dist/
+
+# env
+.env
+.env.*
+
+# Yarn Berry
+.yarn/cache/
+.yarn/unplugged/
+.yarn/install-state.gz
+.yarn/build-state.yml
+
+.vscode/
+
+# Yarn Berry
+.yarn/*
+backend/.yarn/
+
+
+.pnp.cjs
+.pnp.loader.mjs
