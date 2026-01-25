@@ -8,6 +8,7 @@ interface TaskCardProps {
   task: Task;
   onDuplicate: (id: number) => void;
   onDelete: (id: number) => void;
+  onEdit: (task: Task) => void;
   isDuplicating?: boolean;
   isDeleting?: boolean;
 }
@@ -16,6 +17,7 @@ export function TaskCard({
   task,
   onDuplicate,
   onDelete,
+  onEdit,
   isDuplicating,
   isDeleting,
 }: TaskCardProps) {
@@ -40,7 +42,7 @@ export function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`bg-gray-100 rounded p-3 hover:bg-gray-200 transition-colors duration-200 cursor-grab active:cursor-grabbing ${
+      className={`group relative bg-gray-100 rounded p-3 hover:bg-gray-200 transition-colors duration-200 ${
         isDragging ? 'shadow-lg ring-2 ring-blue-500' : ''
       }`}
     >
@@ -52,18 +54,34 @@ export function TaskCard({
         Due: {new Date(task.dueAt).toLocaleDateString()}
       </p>
 
-      <div className="flex gap-2 mt-3">
+      {/* Buttons shown only on hover */}
+      <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
         <button
-          onClick={() => onDuplicate(task.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(task);
+          }}
+          className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded transition-colors duration-200 cursor-pointer"
+        >
+          ✏️ Edit
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDuplicate(task.id);
+          }}
           disabled={isDuplicating}
-          className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white text-sm px-2 py-1 rounded transition-colors duration-200"
+          className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white text-xs px-2 py-1 rounded transition-colors duration-200 cursor-pointer"
         >
           📋 Duplicate
         </button>
         <button
-          onClick={() => onDelete(task.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(task.id);
+          }}
           disabled={isDeleting}
-          className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white text-sm px-2 py-1 rounded transition-colors duration-200"
+          className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white text-xs px-2 py-1 rounded transition-colors duration-200 cursor-pointer"
         >
           🗑️ Delete
         </button>

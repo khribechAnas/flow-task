@@ -46,6 +46,8 @@ export default function TasksPage() {
   );
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [newTask, setNewTask] = useState<CreateTaskInput>({
     title: '',
     description: '',
@@ -137,6 +139,21 @@ export default function TasksPage() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => updateTask(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      setFeedback({ type: 'success', message: 'Task updated!' });
+      setShowEditModal(false);
+      setEditingTask(null);
+      setTimeout(() => setFeedback(null), 3000);
+    },
+    onError: () => {
+      setFeedback({ type: 'error', message: 'Failed to update task' });
+      setTimeout(() => setFeedback(null), 3000);
+    },
+  });
+
   const tasks: Task[] = [
     ...(todoData?.items ?? []),
     ...(inProgressData?.items ?? []),
@@ -204,6 +221,24 @@ export default function TasksPage() {
     });
   };
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateTask = () => {
+    if (!editingTask) return;
+    updateMutation.mutate({
+      id: editingTask.id,
+      data: {
+        title: editingTask.title,
+        description: editingTask.description,
+        status: editingTask.status,
+        dueAt: editingTask.dueAt,
+      },
+    });
+  };
+
   if (isLoadingTodo || isLoadingInProgress || isLoadingDone) return <p className="text-center mt-8">Loading tasks...</p>;
   if (isErrorTodo || isErrorInProgress || isErrorDone) return <p className="text-center mt-8 text-red-500">Failed to load tasks</p>;
 
@@ -214,7 +249,7 @@ export default function TasksPage() {
           <h1 className="text-4xl font-bold">Tasks</h1>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors duration-200"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors duration-200 cursor-pointer"
           >
             + Create Task
           </button>
@@ -283,6 +318,60 @@ export default function TasksPage() {
           </div>
         )}
 
+        {showEditModal && editingTask && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-8 max-w-md w-full">
+              <h2 className="text-2xl font-bold mb-4">Edit Task</h2>
+              <input
+                type="text"
+                placeholder="Title"
+                value={editingTask.title}
+                onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+              />
+              <textarea
+                placeholder="Description"
+                value={editingTask.description || ''}
+                onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+              />
+              <input
+                type="date"
+                value={editingTask.dueAt.split('T')[0]}
+                onChange={(e) => setEditingTask({ ...editingTask, dueAt: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+              />
+              <select
+                value={editingTask.status}
+                onChange={(e) => setEditingTask({ ...editingTask, status: e.target.value as TaskStatus })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-6"
+              >
+                <option value="TODO">TODO</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="DONE">Done</option>
+              </select>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleUpdateTask}
+                  disabled={!editingTask.title || updateMutation.isPending}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2 rounded transition-colors duration-200"
+                >
+                  {updateMutation.isPending ? 'Updating...' : 'Update'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingTask(null);
+                  }}
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-black px-4 py-2 rounded transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -296,6 +385,7 @@ export default function TasksPage() {
                   tasks={col.tasks}
                   onDuplicate={(id) => duplicateMutation.mutate(id)}
                   onDelete={(id) => deleteMutation.mutate(id)}
+                  onEdit={(task) => handleEditTask(task)}
                   isDuplicatingId={undefined}
                   isDeletingId={undefined}
                 />

@@ -12,6 +12,7 @@ interface TaskColumnProps {
   tasks: Task[];
   onDuplicate: (id: number) => void;
   onDelete: (id: number) => void;
+  onEdit: (task: Task) => void;
   isDuplicatingId?: number;
   isDeletingId?: number;
 }
@@ -21,6 +22,7 @@ export function TaskColumn({
   tasks,
   onDuplicate,
   onDelete,
+  onEdit,
   isDuplicatingId,
   isDeletingId,
 }: TaskColumnProps) {
@@ -39,6 +41,7 @@ export function TaskColumn({
                 task={task}
                 onDuplicate={onDuplicate}
                 onDelete={onDelete}
+                onEdit={onEdit}
                 isDuplicating={isDuplicatingId === task.id}
                 isDeleting={isDeletingId === task.id}
               />
