@@ -155,6 +155,32 @@ it('/DELETE tasks/:id (not found)', () => {
     .expect(404);
 });
 
+// POST /tasks/:id/duplicate
+it('/POST tasks/:id/duplicate', async () => {
+  // create 2 tasks
+  const task1 = await request(app.getHttpServer())
+    .post('/tasks')
+    .send({ title: 'Task 1', dueAt: '2026-01-30T00:00:00.000Z', order: 1 });
+
+  const task2 = await request(app.getHttpServer())
+    .post('/tasks')
+    .send({ title: 'Task 2', dueAt: '2026-01-30T00:00:00.000Z', order: 2 });
+
+  // duplicate task1
+  const duplicate = await request(app.getHttpServer())
+    .post(`/tasks/${task1.body.id}/duplicate`)
+    .expect(201);
+
+  // check count increased
+  const all = await request(app.getHttpServer()).get('/tasks');
+  expect(all.body.length).toBeGreaterThanOrEqual(3);
+
+  // check order of duplicated task
+  const last = all.body[all.body.length - 1];
+  expect(last.id).not.toBe(task1.body.id);
+  expect(last.order).toBeGreaterThanOrEqual(3);
+});
+
 
   afterAll(async () => {
     await app.close();

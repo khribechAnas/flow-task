@@ -13,13 +13,21 @@ export class TasksService {
   ) {}
 
   async create(createTaskDto: CreateTaskDto): Promise<Task> {
-    const task = this.tasksRepository.create({
-      ...createTaskDto,
-      order: 0, // placeholder, will update later
-    });
+  // Get the last task by order
+  const lastTask = await this.tasksRepository.find({
+    order: { order: 'DESC' },
+    take: 1,
+  });
 
-    return this.tasksRepository.save(task);
-  }
+  const maxOrder = lastTask[0]?.order ?? 0;
+
+  const task = this.tasksRepository.create({
+    ...createTaskDto,
+    order: maxOrder + 1,
+  });
+
+  return this.tasksRepository.save(task);
+}
 
    findAll() {
     return this.tasksRepository.find({
@@ -59,5 +67,31 @@ async remove(id: number) {
 
   return;
 }
+
+async duplicate(id: number) {
+  const task = await this.tasksRepository.findOneBy({ id });
+
+  if (!task) {
+    throw new NotFoundException('Task not found');
+  }
+
+  // find max order
+  const lastTask = await this.tasksRepository.find({
+    order: { order: 'DESC' },
+    take: 1,
+  });
+
+  const maxOrder = lastTask[0]?.order ?? 0;
+
+  const duplicateTask = this.tasksRepository.create({
+    ...task,
+    id: undefined,
+    order: maxOrder + 1,
+  });
+
+  return this.tasksRepository.save(duplicateTask);
+}
+
+
 
 }

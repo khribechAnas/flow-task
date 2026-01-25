@@ -33,4 +33,9 @@ export class TasksController {
     return this.tasksService.remove(+id);
   }
 
+   @Post(':id/duplicate')
+  duplicate(@Param('id') id: string) {
+    return this.tasksService.duplicate(+id);
+  }
+
 }
