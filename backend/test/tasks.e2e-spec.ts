@@ -62,11 +62,10 @@ describe('Tasks (e2e)', () => {
       .get('/tasks')
       .expect(200)
       .expect((res) => {
-        expect(Array.isArray(res.body)).toBe(true);
-        expect(res.body.length).toBeGreaterThanOrEqual(2);
+        expect(Array.isArray(res.body.items)).toBe(true);
+        expect(res.body.items.length).toBeGreaterThanOrEqual(2);
+        expect(res.body.items[0].order).toBeLessThanOrEqual(res.body.items[1].order);
 
-        // check order sorting
-        expect(res.body[0].order).toBeLessThanOrEqual(res.body[1].order);
       });
   });
 
@@ -171,15 +170,83 @@ it('/POST tasks/:id/duplicate', async () => {
     .post(`/tasks/${task1.body.id}/duplicate`)
     .expect(201);
 
-  // check count increased
-  const all = await request(app.getHttpServer()).get('/tasks');
-  expect(all.body.length).toBeGreaterThanOrEqual(3);
+  // check the duplicated task has correct order
+  expect(duplicate.body.id).toBeDefined();
+  expect(duplicate.body.id).not.toBe(task1.body.id);
+  expect(duplicate.body.order).toBeGreaterThanOrEqual(3);
 
-  // check order of duplicated task
-  const last = all.body[all.body.length - 1];
-  expect(last.id).not.toBe(task1.body.id);
-  expect(last.order).toBeGreaterThanOrEqual(3);
+  // check count increased
+  const all = await request(app.getHttpServer()).get('/tasks?limit=100');
+  expect(all.body.items.length).toBeGreaterThanOrEqual(3);
 });
+
+// GET /tasks (pagination)
+it('/GET tasks (pagination)', async () => {
+  // create 12 tasks
+  for (let i = 1; i <= 12; i++) {
+    await request(app.getHttpServer())
+      .post('/tasks')
+      .send({
+        title: `Task ${i}`,
+        dueAt: '2026-01-30T00:00:00.000Z',
+      });
+  }
+
+  return request(app.getHttpServer())
+    .get('/tasks?page=2&limit=5')
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.items.length).toBe(5);
+      expect(res.body.page).toBe(2);
+      expect(res.body.limit).toBe(5);
+      expect(res.body.total).toBeGreaterThanOrEqual(12);
+    });
+});
+
+// GET tasks (filter by status)
+it('/GET tasks (filter by status)', async () => {
+  await request(app.getHttpServer())
+    .post('/tasks')
+    .send({
+      title: 'Filter Task 1',
+      dueAt: '2026-01-30T00:00:00.000Z',
+      status: 'TODO',
+    });
+
+  await request(app.getHttpServer())
+    .post('/tasks')
+    .send({
+      title: 'Filter Task 2',
+      dueAt: '2026-01-30T00:00:00.000Z',
+      status: 'DONE',
+    });
+
+  return request(app.getHttpServer())
+    .get('/tasks?status=TODO')
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.items.every((t) => t.status === 'TODO')).toBe(true);
+    });
+});
+
+// GET tasks (order DESC)
+it('/GET tasks (order DESC)', async () => {
+  await request(app.getHttpServer())
+    .post('/tasks')
+    .send({ title: 'Order 1', dueAt: '2026-01-30T00:00:00.000Z', order: 1 });
+
+  await request(app.getHttpServer())
+    .post('/tasks')
+    .send({ title: 'Order 2', dueAt: '2026-01-30T00:00:00.000Z', order: 2 });
+
+  return request(app.getHttpServer())
+    .get('/tasks?order=DESC')
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.items[0].order).toBeGreaterThanOrEqual(res.body.items[1].order);
+    });
+});
+
 
 
   afterAll(async () => {

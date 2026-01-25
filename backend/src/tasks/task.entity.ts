@@ -19,7 +19,7 @@ export class Task {
   })
   status: TaskStatus;
 
-  @Column()
+  @Column({ type: 'int', default: 0 })
   order: number;
 
   @CreateDateColumn()
