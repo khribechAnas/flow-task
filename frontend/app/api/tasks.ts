@@ -14,11 +14,12 @@ export interface UpdateTaskInput {
   dueAt?: string;
 }
 
-export const getTasks = async (page: number = 1, limit: number = 100) => {
+export const getTasks = async (page: number = 1, limit: number = 10, status?: string) => {
   const response = await api.get('/tasks', {
     params: {
       page,
       limit,
+      status,
     },
   });
   return response.data;

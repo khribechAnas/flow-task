@@ -11,8 +11,9 @@ import {
   useSensors,
   DragEndEvent,
 } from '@dnd-kit/core';
-import { getTasks, createTask, updateTask, deleteTask, duplicateTask, updateTaskOrder, CreateTaskInput, UpdateTaskInput } from './api/tasks';
+import { getTasks, createTask, updateTask, deleteTask, duplicateTask, updateTaskOrder, CreateTaskInput } from './api/tasks';
 import { TaskColumn } from './components/TaskColumn';
+import { ColumnPagination } from './components/ColumnPagination';
 
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 
@@ -25,6 +26,13 @@ export interface Task {
   dueAt: string;
   createdAt: string;
 }
+
+type TasksResponse = {
+  items: Task[];
+  total: number;
+  page: number;
+  limit: number;
+};
 
 export default function TasksPage() {
   const queryClient = useQueryClient();
@@ -45,23 +53,40 @@ export default function TasksPage() {
     status: 'TODO',
   });
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['tasks', { page: 1, limit: 100 }],
-    queryFn: () => getTasks(1, 100),
+  const [pageTodo, setPageTodo] = useState(1);
+  const [pageInProgress, setPageInProgress] = useState(1);
+  const [pageDone, setPageDone] = useState(1);
+
+  const {
+    data: todoData,
+    isLoading: isLoadingTodo,
+    isError: isErrorTodo,
+  } = useQuery<TasksResponse>({
+    queryKey: ['tasks', 'TODO', pageTodo],
+    queryFn: () => getTasks(pageTodo, 10, 'TODO'),
+  });
+
+  const {
+    data: inProgressData,
+    isLoading: isLoadingInProgress,
+    isError: isErrorInProgress,
+  } = useQuery<TasksResponse>({
+    queryKey: ['tasks', 'IN_PROGRESS', pageInProgress],
+    queryFn: () => getTasks(pageInProgress, 10, 'IN_PROGRESS'),
+  });
+
+  const {
+    data: doneData,
+    isLoading: isLoadingDone,
+    isError: isErrorDone,
+  } = useQuery<TasksResponse>({
+    queryKey: ['tasks', 'DONE', pageDone],
+    queryFn: () => getTasks(pageDone, 10, 'DONE'),
   });
 
   const createMutation = useMutation({
     mutationFn: createTask,
     onSuccess: (created) => {
-      // Update cache so the new task shows immediately
-      queryClient.setQueryData(['tasks', { page: 1, limit: 100 }], (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          items: [...(old.items ?? []), created],
-        };
-      });
-
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setFeedback({ type: 'success', message: 'Task created!' });
       setShowCreateModal(false);
@@ -112,15 +137,43 @@ export default function TasksPage() {
     },
   });
 
-  const tasks: Task[] = data?.items ?? [];
+  const tasks: Task[] = [
+    ...(todoData?.items ?? []),
+    ...(inProgressData?.items ?? []),
+    ...(doneData?.items ?? []),
+  ];
 
   const grouped = useMemo(() => {
-    return tasks.reduce((acc: Record<TaskStatus, Task[]>, task: Task) => {
-      if (!acc[task.status]) acc[task.status] = [];
-      acc[task.status].push(task);
-      return acc;
-    }, {} as Record<TaskStatus, Task[]>);
-  }, [tasks]);
+    return {
+      TODO: todoData?.items ?? [],
+      IN_PROGRESS: inProgressData?.items ?? [],
+      DONE: doneData?.items ?? [],
+    } as Record<TaskStatus, Task[]>;
+  }, [todoData, inProgressData, doneData]);
+
+  const columns = [
+    {
+      status: 'TODO' as TaskStatus,
+      tasks: grouped.TODO,
+      page: pageTodo,
+      total: todoData?.total ?? 0,
+      setPage: setPageTodo,
+    },
+    {
+      status: 'IN_PROGRESS' as TaskStatus,
+      tasks: grouped.IN_PROGRESS,
+      page: pageInProgress,
+      total: inProgressData?.total ?? 0,
+      setPage: setPageInProgress,
+    },
+    {
+      status: 'DONE' as TaskStatus,
+      tasks: grouped.DONE,
+      page: pageDone,
+      total: doneData?.total ?? 0,
+      setPage: setPageDone,
+    },
+  ];
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -151,8 +204,8 @@ export default function TasksPage() {
     });
   };
 
-  if (isLoading) return <p className="text-center mt-8">Loading tasks...</p>;
-  if (isError) return <p className="text-center mt-8 text-red-500">Failed to load tasks</p>;
+  if (isLoadingTodo || isLoadingInProgress || isLoadingDone) return <p className="text-center mt-8">Loading tasks...</p>;
+  if (isErrorTodo || isErrorInProgress || isErrorDone) return <p className="text-center mt-8 text-red-500">Failed to load tasks</p>;
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -230,25 +283,35 @@ export default function TasksPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            {(['TODO', 'IN_PROGRESS', 'DONE'] as TaskStatus[]).map((status) => (
-              <TaskColumn
-                key={status}
-                status={status}
-                tasks={grouped[status] ?? []}
-                onDuplicate={(id) => duplicateMutation.mutate(id)}
-                onDelete={(id) => deleteMutation.mutate(id)}
-                isDuplicatingId={undefined}
-                isDeletingId={undefined}
-              />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {columns.map((col) => (
+              <div key={col.status} className="flex flex-col gap-3">
+                <TaskColumn
+                  status={col.status}
+                  tasks={col.tasks}
+                  onDuplicate={(id) => duplicateMutation.mutate(id)}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                  isDuplicatingId={undefined}
+                  isDeletingId={undefined}
+                />
+                <ColumnPagination
+                  page={col.page}
+                  total={col.total}
+                  onPrev={() => col.setPage((p: number) => Math.max(1, p - 1))}
+                  onNext={() => {
+                    const maxPage = Math.max(1, Math.ceil(col.total / 10));
+                    col.setPage((p: number) => Math.min(maxPage, p + 1));
+                  }}
+                />
+              </div>
             ))}
-          </DndContext>
-        </div>
+          </div>
+        </DndContext>
       </div>
     </div>
   );
