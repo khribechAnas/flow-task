@@ -38,12 +38,14 @@ Make sure you have:
 ```bash
 cd backend
 yarn install
+cp .env.example .env
+
 ```
 
 #### Setup Environment
-Create a `.env` file with:
+fill the `.env`  with:
 ```env
-PORT=4000
+PORT=backend_port
 DB_HOST=localhost
 DB_PORT=5432
 DB_USERNAME=your_username
