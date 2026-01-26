@@ -51,14 +51,21 @@ DB_PORT=5432
 DB_USERNAME=your_username
 DB_PASSWORD=your_password
 DB_NAME=your_database
+FRONTEND_URL=FRONTEND_URL
 ```
+
+#### Make sure that:
+- PostgreSQL is running
+- The credentials match your local PostgreSQL configuration
+- A database with the specified name already exists
+``
 #### Run Backend
 ```bash
-yarn start:dev
+yarn start
 ```
 
 API will be available at:  
-👉 [http://localhost:4000](http://localhost:4000)
+👉 [http://localhost:PORT](http://localhost:4000)
 
 ---
 
@@ -71,7 +78,16 @@ API will be available at:
 #### Installation
 ```bash
 cd frontend
-yarn install
+npm install
+cp .env.exemple .env
+
+```
+
+#### Setup Environment
+Fill the `.env` file with:
+```env
+PORT=frontend_port
+NEXT_PUBLIC_API_URL=backend_url
 ```
 
 #### Run Frontend
@@ -80,7 +96,7 @@ npm run dev
 ```
 
 Frontend will be available at:  
-👉 [http://localhost:3000](http://localhost:3000)
+👉 [http://localhost:PORT](http://localhost:3000)
 
 ---
 
@@ -131,6 +147,20 @@ frontend/
 ---
 
 ## 🧠 Technical Choices (Why these?)
+
+### ✅ NestJS (Backend Framework)
+Chosen for:
+- Clean architecture and modular structure
+- Built-in support for dependency injection
+- Easy scalability and maintainability
+- Strong TypeScript support and powerful CLI
+
+### ✅ PostgreSQL (Database)
+Chosen for:
+- Strong relational data support
+- ACID compliance for data integrity
+- Great performance and reliability
+- Easy to scale and widely supported in production
 
 ### ✅ Next.js (App Router)
 Chosen for:
