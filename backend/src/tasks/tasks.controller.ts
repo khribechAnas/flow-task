@@ -40,3 +40,18 @@ export class TasksController {
   }
 
 }
+  @Put(':id/in-progress')
+  markAsInProgress(@Param('id') id: string) {
+    return this.tasksService.markAsInProgress(+id);
+  }
+
+  @Put(':id/done')
+  markAsDone(@Param('id') id: string) {
+    return this.tasksService.markAsDone(+id);
+  }
+
+  @Put(':id/reopen')
+  reopenTask(@Param('id') id: string) {
+    return this.tasksService.reopenTask(+id);
+  }
+

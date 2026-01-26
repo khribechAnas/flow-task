@@ -239,4 +239,127 @@ describe('TasksService', () => {
       );
     });
   });
+
+  describe('markAsInProgress', () => {
+    it('should mark a TODO task as IN_PROGRESS', async () => {
+      const task = {
+        id: 1,
+        title: 'Test Task',
+        status: TaskStatus.TODO,
+        order: 1,
+      };
+
+      const updatedTask = { ...task, status: TaskStatus.IN_PROGRESS };
+
+      mockRepository.findOneBy.mockResolvedValue(task);
+      mockRepository.save.mockResolvedValue(updatedTask);
+
+      const result = await service.markAsInProgress(1);
+
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(mockRepository.save).toHaveBeenCalledWith({
+        ...task,
+        status: TaskStatus.IN_PROGRESS,
+      });
+      expect(result.status).toBe(TaskStatus.IN_PROGRESS);
+    });
+
+    it('should throw NotFoundException when task not found', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.markAsInProgress(999)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('markAsDone', () => {
+    it('should mark an IN_PROGRESS task as DONE', async () => {
+      const task = {
+        id: 1,
+        title: 'Test Task',
+        status: TaskStatus.IN_PROGRESS,
+        order: 1,
+      };
+
+      const updatedTask = { ...task, status: TaskStatus.DONE };
+
+      mockRepository.findOneBy.mockResolvedValue(task);
+      mockRepository.save.mockResolvedValue(updatedTask);
+
+      const result = await service.markAsDone(1);
+
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(result.status).toBe(TaskStatus.DONE);
+    });
+
+    it('should mark a TODO task as DONE', async () => {
+      const task = {
+        id: 1,
+        title: 'Test Task',
+        status: TaskStatus.TODO,
+        order: 1,
+      };
+
+      const updatedTask = { ...task, status: TaskStatus.DONE };
+
+      mockRepository.findOneBy.mockResolvedValue(task);
+      mockRepository.save.mockResolvedValue(updatedTask);
+
+      const result = await service.markAsDone(1);
+
+      expect(result.status).toBe(TaskStatus.DONE);
+    });
+
+    it('should throw NotFoundException when task not found', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.markAsDone(999)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('reopenTask', () => {
+    it('should reopen a DONE task to TODO', async () => {
+      const task = {
+        id: 1,
+        title: 'Test Task',
+        status: TaskStatus.DONE,
+        order: 1,
+      };
+
+      const updatedTask = { ...task, status: TaskStatus.TODO };
+
+      mockRepository.findOneBy.mockResolvedValue(task);
+      mockRepository.save.mockResolvedValue(updatedTask);
+
+      const result = await service.reopenTask(1);
+
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(result.status).toBe(TaskStatus.TODO);
+    });
+
+    it('should reopen an IN_PROGRESS task to TODO', async () => {
+      const task = {
+        id: 1,
+        title: 'Test Task',
+        status: TaskStatus.IN_PROGRESS,
+        order: 1,
+      };
+
+      const updatedTask = { ...task, status: TaskStatus.TODO };
+
+      mockRepository.findOneBy.mockResolvedValue(task);
+      mockRepository.save.mockResolvedValue(updatedTask);
+
+      const result = await service.reopenTask(1);
+
+      expect(result.status).toBe(TaskStatus.TODO);
+    });
+
+    it('should throw NotFoundException when task not found', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.reopenTask(999)).rejects.toThrow(NotFoundException);
+    });
+  });
 });

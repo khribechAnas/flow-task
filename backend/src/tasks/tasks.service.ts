@@ -5,6 +5,7 @@ import { Task } from './task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { PaginationDto } from './dto/pagination.dto';
+import { TaskStatus } from './task-status.enum';
 
 @Injectable()
 export class TasksService {
@@ -128,6 +129,38 @@ async duplicate(id: number) {
   return this.tasksRepository.save(duplicateTask);
 }
 
+  async markAsInProgress(id: number): Promise<Task> {
+  const task = await this.tasksRepository.findOneBy({ id });
 
+  if (!task) {
+    throw new NotFoundException('Task not found');
+  }
+
+  task.status = TaskStatus.IN_PROGRESS;
+  return this.tasksRepository.save(task);
+}
+
+  async markAsDone(id: number): Promise<Task> {
+  const task = await this.tasksRepository.findOneBy({ id });
+
+  if (!task) {
+    throw new NotFoundException('Task not found');
+  }
+
+  task.status = TaskStatus.DONE;
+  return this.tasksRepository.save(task);
+}
+
+  async reopenTask(id: number): Promise<Task> {
+  const task = await this.tasksRepository.findOneBy({ id });
+
+  if (!task) {
+    throw new NotFoundException('Task not found');
+  }
+
+  task.status = TaskStatus.TODO;
+  return this.tasksRepository.save(task);
+  }
 
 }
+
