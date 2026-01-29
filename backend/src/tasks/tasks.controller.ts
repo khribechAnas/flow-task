@@ -39,7 +39,6 @@ export class TasksController {
     return this.tasksService.duplicate(+id);
   }
 
-}
   @Put(':id/in-progress')
   markAsInProgress(@Param('id') id: string) {
     return this.tasksService.markAsInProgress(+id);
@@ -54,4 +53,5 @@ export class TasksController {
   reopenTask(@Param('id') id: string) {
     return this.tasksService.reopenTask(+id);
   }
+}
 
